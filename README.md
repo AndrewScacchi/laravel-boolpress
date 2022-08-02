@@ -123,6 +123,62 @@
 1. Svuotare la cartella **resources/js/components** se esiste oppure crearla
 1. Creare il componente **App.vue** nella stessa cartella (**resources/js/components**)
 1. Ed ora scrivere tutto il front office
-
 ## Laravel API
 1. ...
+
+## Usare il router di Vue
+1. installarlo: ```npm install vue-router@3 --save-dev```
+1. in **resources/js/front.js** collegare vue-router con vue:
+    ```js
+        require('./bootstrap');
+
+        import Vue from 'vue';
+        import VueRouter from 'vue-router'; // importiamo la libreria vue-router
+        import App from './App.vue';
+
+        // importiamo tutti i componenti delle pagine
+        // ...
+        // ...
+        // ...
+
+
+        // definiamo le rotte
+        const routes = [
+            {
+                path: 'percorso url',
+                name: 'nome rotta',
+                component: NomeComponente,
+            },
+            // definite anche gli altri
+            {
+                path: '*',
+                name: 'page404',
+                component: Page404,
+            }
+        ]
+
+        // costruiamo il nostro router
+        const router = new VueRouter({
+            routes,
+            mode: 'history',
+        });
+
+
+        Vue.use(VueRouter); // diciamo a Vue di usare il plugin vue-router
+
+        const app = new Vue({
+            el: '#root',
+            render: h => h(App),
+            router, // diciamo a vue di inizializzare la nostra app usando il router che abbiamo costruito
+        });
+    ```
+1. Creiamo la cartella **pages** con tutte le pagine
+1. Creiamo i componenti vue per ciascuna pagina
+1. Usiamo il router:
+    ```
+        <router-view></router-view>
+    ```
+    e
+    ```
+        <router-link :to="{name: 'nome route''">Contentuto</router-link>
+    ```
