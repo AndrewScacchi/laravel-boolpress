@@ -5,6 +5,8 @@ use App\Models\User;
 use App\Models\Category;
 use Faker\Generator as Faker;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\File;
 
 class PostSeeder extends Seeder
 {
@@ -37,7 +39,18 @@ class PostSeeder extends Seeder
             $post->category_id = $faker->randomElement($categories_ids);
             // $post->title = 'ciao a tutti!@';
             $post->slug = Post::getSlug($post->title);
-            $post->image = 'https://picsum.photos/id/' . rand(1, 300) . '/500/300';
+            // $post->image = 'https://picsum.photos/id/' . rand(1, 300) . '/500/300';
+
+            // si può fare anche in altri modi
+            $number = rand(0, 276);
+            if ($number) {
+                $contents = new File(__DIR__ . '/../../storage/app/lorempicsum/005(' . $number . ').jpg');
+                // $tmp_img_url = $faker->image();
+                $post->image = Storage::put('uploads', $contents);
+            } else {
+                $post->image = null;
+            }
+
             $post->content = $faker->paragraphs(rand(2, 10), true);
             $post->excerpt = $faker->paragraph();
             $post->save();

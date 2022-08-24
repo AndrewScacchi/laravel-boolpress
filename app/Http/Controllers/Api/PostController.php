@@ -9,6 +9,10 @@ use App\Http\Controllers\Controller;
 
 class PostController extends Controller
 {
+    private function fixImageUrl($imgPath) {
+        return $imgPath ? asset('/storage/' . $imgPath) : null;
+    }
+
     // Display a listing of the resource.
     public function index(Request $request)
     {
@@ -21,6 +25,10 @@ class PostController extends Controller
 
         $posts = Post::with(['user', 'category', 'tags'])->paginate($per_page);
 
+        foreach ($posts as $post) {
+            $post->image = $this->fixImageUrl($post->image);
+        }
+
         return response()->json([
             'success'   => true,
             'response'  => $posts
@@ -30,8 +38,12 @@ class PostController extends Controller
 
     // Restituisce 9 post random per la homepage in Vue
     public function random() {
-        $sql = Post::with(['user', 'category', 'tags'])->limit(9)->inRandomOrder();
+        $sql = Post::with(['user', 'category', 'tags'])->whereNotNull('image')->limit(9)->inRandomOrder();
         $posts = $sql->get();
+
+        foreach ($posts as $post) {
+            $post->image = $this->fixImageUrl($post->image);
+        }
 
         return response()->json([
             // 'sql'       => $sql->toSql(), // solo per debugging
@@ -47,6 +59,8 @@ class PostController extends Controller
         $post = Post::with(['user', 'category', 'tags'])->where('slug', $slug)->first();
 
         if ($post) {
+            // $post->image = $post->image ? '/storage/' . $post->image : null;
+            $post->image = $this->fixImageUrl($post->image);
             return response()->json([
                 'success'   => true,
                 'result'    => $post

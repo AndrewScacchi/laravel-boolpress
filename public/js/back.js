@@ -10546,6 +10546,36 @@ if (eleOverlay) {
   });
 }
 
+var inputTitle = document.getElementById('title');
+
+if (inputTitle) {
+  inputSlug = document.getElementById('slug');
+  inputTitle.addEventListener('focusout', function () {
+    if (!inputSlug.value) {
+      axios('/admin/getslug?title=' + inputTitle.value).then(function (res) {
+        return inputSlug.value = res.data.response;
+      });
+    }
+  });
+}
+
+var inputImage = document.getElementById('image');
+
+if (inputImage) {
+  var elePreview = document.getElementById('preview');
+  inputImage.addEventListener('change', function (event) {
+    var imgPath = event.target.files[0];
+    var reader = new FileReader();
+    reader.addEventListener('load', function () {
+      elePreview.src = reader.result;
+    });
+
+    if (imgPath) {
+      reader.readAsDataURL(imgPath);
+    }
+  });
+}
+
 /***/ }),
 
 /***/ "./resources/js/bootstrap.js":

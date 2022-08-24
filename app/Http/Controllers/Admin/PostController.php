@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class PostController extends Controller
 {
@@ -22,7 +23,8 @@ class PostController extends Controller
         'category_id'   => 'required|integer|exists:categories,id',
         'tags'          => 'nullable|array',
         'tags.*'        => 'integer|exists:tags,id',
-        'image'         => 'required_without:content|nullable|url',
+        // 'image'         => 'required_without:content|nullable|url',
+        'image'         => 'required_without:content|nullable|file|image|max:1024', // dimensione max in kilobytes
         'content'       => 'required_without:image|nullable|string|max:5000',
         'excerpt'       => 'nullable|string|max:200',
     ];
@@ -60,11 +62,22 @@ class PostController extends Controller
     // Store a newly created resource in storage.
     public function store(Request $request)
     {
+        // dd($request->all());
         // validation
         $this->validation_rules['slug'][] = 'unique:posts';
         $request->validate($this->validation_rules);
 
-        $data = $request->all() + [
+        $data = $request->all();
+
+        if (key_exists('image', $data)) {
+            // salvare l'immagine in public
+            $img_path = Storage::put('uploads', $data['image']);
+
+            // aggiornare il valore della chiave image con il nome dell'immagine appena creata
+            $data['image'] = $img_path;
+        }
+
+        $data = $data + [
             'user_id'       => Auth::id(),
         ];
         // dump($data);
@@ -111,6 +124,19 @@ class PostController extends Controller
         $request->validate($this->validation_rules);
         $data = $request->all();
 
+        if (key_exists('image', $data)) {
+            // eliminare il file precedente se esiste
+            if ($post->image) {
+                Storage::delete($post->image);
+            }
+
+            // caricare il nuovo file
+            $img_path = Storage::put('uploads', $data['image']);
+
+            // aggiornare l'array $data con il percorso del file appena creato
+            $data['image'] = $img_path;
+        }
+
         // aggiornare nel database
         $post->update($data);
         $post->tags()->sync($data['tags']);
@@ -131,5 +157,16 @@ class PostController extends Controller
         $post->delete();
 
         return redirect()->route('admin.posts.index')->with('deleted', "Il post <strong>{$post->title}</strong> è stato eliminato");
+    }
+
+    public function getSlug(Request $request) {
+        // /admin/getslug?title=Questo è il titolo
+        $title = $request->query('title');
+        $slug = Post::getSlug($title);
+
+        return response()->json([
+            'success'   => true,
+            'response'  => $slug
+        ]);
     }
 }
